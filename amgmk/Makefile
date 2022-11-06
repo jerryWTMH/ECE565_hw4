@@ -8,9 +8,9 @@
 CC       = gcc
 LDR      = gcc
 
-CFLAGS   = -O3 -fopenmp -c
+CFLAGS   = -O3 -fopenmp -c -pg
 
-LDFLAGS  = -O3 -fopenmp -lm
+LDFLAGS  = -O3 -fopenmp -lm -pg
 
 LIBS     = 
 LIB_DIRS =
