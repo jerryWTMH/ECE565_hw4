@@ -72,20 +72,24 @@ int  hypre_BoomerAMGSeqRelax( hypre_CSRMatrix *A,
    /*-----------------------------------------------------------------
     * Relax all points.
     *-----------------------------------------------------------------*/
-   omp_set_num_threads(2); 
-   #pragma omp parallel for private(jj)
-   for (i = 0; i < n; i++){ /* interior points first */
+   
+   for (i = 0; i < n; i++)	/* interior points first */
+   {
+     
      /*-----------------------------------------------------------
       * If diagonal is nonzero, relax point i; otherwise, skip it.
       *-----------------------------------------------------------*/ 
-     if ( A_diag_data[A_diag_i[i]] != 0.0){
-        res = f_data[i];
-        for (jj = A_diag_i[i]+1; jj < A_diag_i[i+1]; jj++){
-	        ii = A_diag_j[jj];
-	        res -= A_diag_data[jj] * u_data[ii];
-        }
-        u_data[i] = res / A_diag_data[A_diag_i[i]];
+     if ( A_diag_data[A_diag_i[i]] != 0.0)
+     {
+       res = f_data[i];
+       for (jj = A_diag_i[i]+1; jj < A_diag_i[i+1]; jj++)
+       {
+	 ii = A_diag_j[jj];
+	 res -= A_diag_data[jj] * u_data[ii];
+       }
+       u_data[i] = res / A_diag_data[A_diag_i[i]];
      }
    }
+   
    return(relax_error); 
 }

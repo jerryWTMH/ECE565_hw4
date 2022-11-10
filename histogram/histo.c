@@ -385,44 +385,60 @@ long* histogram(char* fn_input) {
   pImage image;
   int i, j, m;
   long* histo;
-  long* histo_arr[256];
   double t_start, t_end;
-  int threads = 2;
-  
+
   /* initalization & reading image file */
   histo = malloc(256*sizeof(long));
-  for (i = 0; i < 256; i++){
-    histo_arr[i] = (long *) malloc(sizeof(long)*threads);
-  }
-  
   image = Image_Read(fn_input);
-  
-  histo = malloc(256*sizeof(long));
+
   for (i=0; i<256; i++) {
     histo[i] = 0;
-    for (j=0; j < threads; j++){
-      histo_arr[i][j] = 0;   
-    }
   }
-  
+
   t_start = omp_get_wtime();
-  omp_set_num_threads(threads);
-  /* obtain histogram from image, repeated 100 times */
+
+  // original
+  // for (m=0; m<100; m++) {
+  //   for (i=0; i < image->row; i++) {
+  //     for (j=0; j < image->col; j++) {
+  //       histo[image->content[i][j]]++;
+  //     }
+  //   }
+  // }
+
+  // lock
+  /*obtain histogram from image, repeated 100 times */
+  // int rowMax = image->row;
+  // int colMax = image->col;
+  // omp_lock_t lock_set[256];
+  // for(int i =0; i < 256; i++){
+  //   omp_init_lock(&lock_set[i]);
+  // }
+  // omp_set_num_threads(8);
+  // for (m=0; m<100; m++) {
+  //   #pragma omp parallel for private(i, j), shared(rowMax, colMax)
+  //   for (i=0; i < rowMax; i++) {
+  //     for (j=0; j < colMax; j++) {
+  //       omp_set_lock(&lock_set[image->content[i][j]]);
+  //         histo[image->content[i][j]]++;
+  //       omp_unset_lock(&lock_set[image->content[i][j]]);
+  //     }
+  //   }
+  // }
+  
+  // atomic
+  int rowMax = image->row;
+  int colMax = image->col;
+  omp_set_num_threads(8);
   for (m=0; m<100; m++) {
-    for (i=0; i<image->row; i++) {
-     #pragma omp parallel for 
-      for (j=0; j < image->col; j++) {
-        histo_arr[image->content[i][j]][omp_get_thread_num()]++;
+    #pragma omp parallel for collapse(2) private(i, j), shared(rowMax, colMax)
+    for (i=0; i < rowMax; i++) {
+      for (j=0; j < colMax; j++) {
+          #pragma omp atomic update
+          histo[image->content[i][j]]++;
       }
     }
   }
-
- #pragma omp parallel for private(j)  
-  for (i = 0; i < 256; i++) {
-    for (j = 0; j < threads; j++) {
-      histo[i] += histo_arr[i][j];
-    }
-  } 
 
   t_end = omp_get_wtime();
 
@@ -436,6 +452,7 @@ long* histogram(char* fn_input) {
 
   return histo;
 }
+
 
 int main(int argc, char** argv)
 {

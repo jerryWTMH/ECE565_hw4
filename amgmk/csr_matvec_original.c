@@ -101,14 +101,13 @@ hypre_CSRMatrixMatvec( double           alpha,
    /*-----------------------------------------------------------------------
     * Do (alpha == 0.0) computation - RDF: USE MACHINE EPS
     *-----------------------------------------------------------------------*/
-   omp_set_num_threads(2); 
+
     if (alpha == 0.0)
     {
-      #pragma omp parallel for
-      for (i = 0; i < num_rows*num_vectors; i++)
+       for (i = 0; i < num_rows*num_vectors; i++)
           y_data[i] *= beta;
 
-      return ierr;
+       return ierr;
     }
 
    /*-----------------------------------------------------------------------
@@ -116,13 +115,18 @@ hypre_CSRMatrixMatvec( double           alpha,
     *-----------------------------------------------------------------------*/
    
    temp = beta / alpha;
-   if (temp != 1.0){
-      if (temp == 0.0){
-         #pragma omp parallel for
-	      for (i = 0; i < num_rows*num_vectors; i++) y_data[i] = 0.0;
-      } else{
-         #pragma omp parallel for
-	      for (i = 0; i < num_rows*num_vectors; i++) y_data[i] *= temp;
+
+   if (temp != 1.0)
+   {
+      if (temp == 0.0)
+      {
+	 for (i = 0; i < num_rows*num_vectors; i++)
+	    y_data[i] = 0.0;
+      }
+      else
+      {
+	 for (i = 0; i < num_rows*num_vectors; i++)
+	    y_data[i] *= temp;
       }
    }
 
@@ -132,9 +136,10 @@ hypre_CSRMatrixMatvec( double           alpha,
 
 /* use rownnz pointer to do the A*x multiplication  when num_rownnz is smaller than num_rows */
 
-   if (num_rownnz < xpar*(num_rows)){
-      #pragma omp parallel for
-      for (i = 0; i < num_rownnz; i++){
+   if (num_rownnz < xpar*(num_rows))
+   {
+      for (i = 0; i < num_rownnz; i++)
+      {
          m = A_rownnz[i];
 
          /*
@@ -159,9 +164,12 @@ hypre_CSRMatrixMatvec( double           alpha,
                y_data[ j*vecstride_y + m*idxstride_y] = tempx;
             }
       }
-   } else{
-      #pragma omp parallel for
-      for (i = 0; i < num_rows; i++){
+
+   }
+   else
+   {
+      for (i = 0; i < num_rows; i++)
+      {
          if ( num_vectors==1 )
          {
             temp = y_data[i];
@@ -187,9 +195,10 @@ hypre_CSRMatrixMatvec( double           alpha,
     * y = alpha*y
     *-----------------------------------------------------------------*/
 
-   if (alpha != 1.0){
-      #pragma omp parallel for
-      for (i = 0; i < num_rows*num_vectors; i++) y_data[i] *= alpha;
+   if (alpha != 1.0)
+   {
+      for (i = 0; i < num_rows*num_vectors; i++)
+	 y_data[i] *= alpha;
    }
 
    return ierr;

@@ -404,8 +404,7 @@ double   hypre_SeqVectorInnerProd( hypre_Vector *x,
 
    size *=hypre_VectorNumVectors(x);
 
-   omp_set_num_threads(2); 
-   #pragma omp parallel for private(i, y_data, x_data)
+
    for (i = 0; i < size; i++)
       result += y_data[i] * x_data[i];
 
